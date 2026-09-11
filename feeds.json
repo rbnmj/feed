@@ -1,0 +1,52 @@
+{
+  "settings": {
+    "max_age_hours": 48,
+    "max_items_total": 800,
+    "max_items_per_source": 40,
+    "summary_chars": 280
+  },
+
+  "categories": [
+    { "id": "markets",     "label": "Markets" },
+    { "id": "geopolitics", "label": "Geopolitics" },
+    { "id": "wire",        "label": "Wire" }
+  ],
+
+  "sources": [
+    { "id": "cnbc_top",        "name": "CNBC",            "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114" },
+    { "id": "cnbc_markets",    "name": "CNBC Markets",    "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258" },
+    { "id": "marketwatch_top", "name": "MarketWatch",     "category": "markets",     "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories" },
+    { "id": "marketwatch_rt",  "name": "MarketWatch Pulse","category": "markets",    "url": "https://feeds.content.dowjones.io/public/rss/mw_marketpulse" },
+    { "id": "yahoo_finance",   "name": "Yahoo Finance",   "category": "markets",     "url": "https://finance.yahoo.com/news/rssindex" },
+
+    { "id": "bbc_world",       "name": "BBC World",       "category": "geopolitics", "url": "https://feeds.bbci.co.uk/news/world/rss.xml" },
+    { "id": "aljazeera",       "name": "Al Jazeera",      "category": "geopolitics", "url": "https://www.aljazeera.com/xml/rss/all.xml" },
+    { "id": "guardian_world",  "name": "The Guardian",    "category": "geopolitics", "url": "https://www.theguardian.com/world/rss" },
+    { "id": "dw_world",        "name": "DW",              "category": "geopolitics", "url": "https://rss.dw.com/rdf/rss-en-world" },
+    { "id": "politico_eu",     "name": "POLITICO Europe", "category": "geopolitics", "url": "https://www.politico.eu/feed/" },
+    { "id": "foreign_policy",  "name": "Foreign Policy",  "category": "geopolitics", "url": "https://foreignpolicy.com/feed/" }
+  ],
+
+  "benzinga": {
+    "comment": "Only runs if the repository secret BENZINGA_API_KEY exists. Everything this script writes is publicly readable.",
+    "enabled": true,
+    "category": "wire",
+    "name": "Benzinga",
+    "page_size": 60,
+    "lookback_hours": 6,
+    "include_summaries": false,
+    "channels": [],
+    "tickers": []
+  },
+
+  "quotes": [
+    { "symbol": "^GSPC",    "label": "S&P 500",    "decimals": 2 },
+    { "symbol": "^IXIC",    "label": "Nasdaq",     "decimals": 2 },
+    { "symbol": "^GDAXI",   "label": "DAX",        "decimals": 2 },
+    { "symbol": "^STOXX50E","label": "Euro Stoxx 50","decimals": 2 },
+    { "symbol": "EURUSD=X", "label": "EUR/USD",    "decimals": 4 },
+    { "symbol": "BTC-USD",  "label": "Bitcoin",    "decimals": 0 },
+    { "symbol": "GC=F",     "label": "Gold",       "decimals": 1 },
+    { "symbol": "BZ=F",     "label": "Brent",      "decimals": 2 }
+  ]
+}

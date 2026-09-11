@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>newsdash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..650;1,6..72,500..650&family=Sofia+Sans+Semi+Condensed:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------ tokens */
+:root {
+  --timecol: 58px;
+  --gap: 30px;
+  --spine: calc(var(--timecol) + var(--gap) / 2);
+  --sans: "Sofia Sans Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+}
+:root, [data-theme="dark"] {
+  --bg: #16202a;
+  --bar: rgba(22, 32, 42, .92);
+  --raise: #1f2c39;
+  --ink: #e4e9ee;
+  --ink-2: #93a2b1;
+  --ink-3: #6b7b8b;
+  --rule: #2a3947;
+  --up: #5cc38c;
+  --down: #f0737c;
+  --focus: #8fc7ff;
+  --cat-0: #4fb8ad;
+  --cat-1: #e2aa46;
+  --cat-2: #a194f4;
+  --cat-3: #ec7fa7;
+  --cat-4: #6fb2ec;
+  --cat-5: #a9c95a;
+}
+[data-theme="light"] {
+  --bg: #eceff2;
+  --bar: rgba(236, 239, 242, .92);
+  --raise: #f8f9fb;
+  --ink: #15202b;
+  --ink-2: #4f5d6a;
+  --ink-3: #74818d;
+  --rule: #cfd6dd;
+  --up: #17804e;
+  --down: #bf3342;
+  --focus: #1f63c4;
+  --cat-0: #19756d;
+  --cat-1: #9a6508;
+  --cat-2: #5b48c9;
+  --cat-3: #b23a68;
+  --cat-4: #22669f;
+  --cat-5: #5a7a12;
+}
+
+/* ------------------------------------------------------------------- base */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--bg); color: var(--ink); -webkit-text-size-adjust: 100%; }
+body { margin: 0; font: 400 16px/1.45 var(--sans); }
+.t, .q, .tab .n, .ago, .status, .src-list .st { font-variant-numeric: tabular-nums; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+a { color: inherit; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ----------------------------------------------------------------- header */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bar);
+  backdrop-filter: saturate(1.2) blur(10px);
+  -webkit-backdrop-filter: saturate(1.2) blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.head {
+  position: relative;
+  display: grid; align-items: center; column-gap: 24px;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "brand quotes quotes quotes"
+    "tabs  tabs   search ctrl";
+}
+.brand { grid-area: brand; }
+.quotes { grid-area: quotes; }
+.tabs { grid-area: tabs; align-self: end; }
+.search { grid-area: search; }
+.ctrl { grid-area: ctrl; }
+.brand {
+  font: italic 600 23px/1 var(--serif);
+  letter-spacing: -.01em;
+  margin: 0; padding: 14px 0 12px;
+}
+.quotes {
+  min-width: 0;
+  display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent);
+  padding-right: 24px;
+}
+.quotes::-webkit-scrollbar { display: none; }
+.q { display: grid; grid-template-columns: auto auto; column-gap: 7px; flex: none; line-height: 1.15; }
+.q-label { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.q-price { font-weight: 650; font-size: 16px; }
+.q-chg { font-size: 14px; font-weight: 600; align-self: end; }
+.q-chg.up { color: var(--up); }
+.q-chg.down { color: var(--down); }
+.q.stale .q-price, .q.stale .q-chg { opacity: .55; }
+
+.ctrl { display: flex; align-items: center; gap: 2px; margin-right: -10px; }
+.btn {
+  border: 1px solid transparent; background: none; border-radius: 6px;
+  padding: 5px 10px; font-size: 15px; font-weight: 550; color: var(--ink-2);
+}
+.btn:hover { color: var(--ink); background: var(--raise); }
+.btn[aria-pressed="true"] { color: var(--ink); border-color: var(--rule); }
+.status { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.status[data-s="ok"] .dot { background: var(--up); }
+.status[data-s="late"] .dot { background: var(--cat-1); }
+.status[data-s="stale"] .dot, .status[data-s="err"] .dot { background: var(--down); }
+
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.tab {
+  background: none; border: 0; padding: 8px 10px 10px; font-size: 16px; font-weight: 650;
+  color: var(--ink-2); position: relative; white-space: nowrap; border-radius: 6px 6px 0 0;
+}
+.tab .n { font-weight: 450; color: var(--ink-3); margin-left: 5px; font-size: 14px; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); }
+.tab[aria-selected="true"]::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px;
+  border-radius: 2px 2px 0 0; background: var(--c, var(--ink));
+}
+.search { position: relative; width: 250px; margin: 6px 0 8px; }
+.search input {
+  width: 100%; background: var(--raise); border: 1px solid var(--rule); border-radius: 7px;
+  padding: 6px 30px 6px 11px; font-size: 15px;
+}
+.search input::placeholder { color: var(--ink-3); }
+.search input:focus { outline: none; border-color: var(--focus); }
+.search kbd {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font: 600 12px/1 var(--sans); color: var(--ink-3); border: 1px solid var(--rule);
+  border-radius: 4px; padding: 3px 6px 2px;
+}
+.search input:focus + kbd, .search input:not(:placeholder-shown) + kbd { display: none; }
+
+/* -------------------------------------------------------- sources panel */
+.panel {
+  position: absolute; right: 24px; top: calc(100% + 8px); width: min(420px, calc(100vw - 28px));
+  background: var(--raise); border: 1px solid var(--rule); border-radius: 10px;
+  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, .45); padding: 16px 18px 12px; z-index: 20;
+  max-height: calc(100vh - 80px); overflow: auto;
+}
+.panel h2 { font: 600 17px/1.2 var(--serif); margin: 0 0 4px; }
+.panel .sub { color: var(--ink-2); font-size: 14px; margin: 0 0 12px; }
+.panel .actions { display: flex; gap: 8px; margin-bottom: 12px; }
+.panel .actions .btn { border-color: var(--rule); color: var(--ink); }
+.src-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.src-list li {
+  display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: baseline;
+  padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 14px;
+}
+.src-list .sw { width: 8px; height: 8px; border-radius: 50%; background: var(--c); transform: translateY(-1px); }
+.src-list .st { color: var(--ink-2); text-align: right; }
+.src-list .bad .st { color: var(--down); }
+.src-list .off { opacity: .6; }
+.panel .fine { color: var(--ink-3); font-size: 12.5px; margin: 10px 0 0; word-break: break-all; }
+
+/* ----------------------------------------------------------------- feed */
+main { padding: 8px 0 80px; }
+.feed { position: relative; }
+.feed::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: var(--spine); width: 1px; background: var(--rule);
+}
+.item, .day {
+  position: relative; display: grid; grid-template-columns: var(--timecol) minmax(0, 1fr); column-gap: var(--gap);
+}
+.item { padding: 13px 0 14px; isolation: isolate; }
+.item::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; opacity: 0;
+  left: calc(var(--spine) + 14px); right: max(-12px, calc(100% - var(--timecol) - var(--gap) - 760px)); top: 4px; bottom: 4px; border-radius: 8px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 16%, transparent), transparent 85%);
+}
+.item::before {
+  content: ""; position: absolute; left: calc(var(--spine) - 4px); top: 20px;
+  width: 9px; height: 9px; border-radius: 50%; background: var(--c);
+  box-shadow: 0 0 0 4px var(--bg);
+}
+.t { text-align: right; font-weight: 600; font-size: 15px; color: var(--ink-2); padding-top: 1px; }
+.body { max-width: 720px; }
+.meta { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 12px; row-gap: 3px; font-size: 14.5px; }
+.src { color: var(--c); font-weight: 700; }
+.ago { color: var(--ink-3); }
+.chip {
+  font-size: 13px; font-weight: 650; letter-spacing: .02em; color: var(--ink-2);
+  border: 1px solid var(--rule); border-radius: 4px; padding: 0 5px; line-height: 18px;
+}
+.chip.tag { border-style: dashed; font-weight: 500; letter-spacing: 0; }
+.title {
+  display: block; margin-top: 2px; text-decoration: none;
+  font: 500 19px/1.3 var(--serif); letter-spacing: -.005em;
+  text-wrap: pretty;
+}
+.title:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.item.visited .title { color: var(--ink-2); }
+.sum {
+  margin: 4px 0 0; color: var(--ink-2); font-size: 15.5px; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+mark { background: color-mix(in srgb, var(--cat-1) 30%, transparent); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+.day { padding: 30px 0 4px; }
+.day::before {
+  content: ""; position: absolute; left: calc(var(--spine) - 6px); top: 34px;
+  width: 13px; height: 13px; border-radius: 50%; background: var(--bg); border: 2px solid var(--ink-3);
+}
+.day-label { grid-column: 2; font: italic 500 17px/1.2 var(--serif); color: var(--ink-2); }
+.feed > .day:first-child { padding-top: 14px; }
+.feed > .day:first-child::before { top: 18px; }
+
+/* the one moment of motion: a headline arriving on the spine */
+.item.fresh::before { animation: land 1.4s cubic-bezier(.2, .7, .2, 1) both; }
+.item.fresh::after { animation: wash 9s ease-out both; }
+@keyframes land {
+  0%   { transform: scale(2.6); box-shadow: 0 0 0 4px var(--bg), 0 0 0 10px color-mix(in srgb, var(--c) 45%, transparent); }
+  100% { transform: scale(1);   box-shadow: 0 0 0 4px var(--bg), 0 0 0 0 transparent; }
+}
+@keyframes wash {
+  0%, 30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.pill {
+  position: fixed; left: 50%; transform: translateX(-50%); top: 120px; z-index: 9;
+  background: var(--ink); color: var(--bg); border: 0; border-radius: 999px;
+  padding: 7px 16px; font-size: 14.5px; font-weight: 650;
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, .5);
+}
+
+.notice { padding: 56px 0 0 calc(var(--timecol) + var(--gap)); max-width: 640px; }
+.notice h2 { font: 500 24px/1.25 var(--serif); margin: 0 0 8px; }
+.notice p { color: var(--ink-2); margin: 0 0 10px; font-size: 16px; }
+.notice code { font-size: 13.5px; background: var(--raise); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 5px; word-break: break-all; }
+.notice .btn { border-color: var(--rule); color: var(--ink); margin-top: 6px; }
+
+footer { color: var(--ink-3); font-size: 13px; padding: 0 0 40px calc(var(--timecol) + var(--gap)); }
+
+/* ------------------------------------------------------------ responsive */
+@media (max-width: 760px) {
+  .wrap { padding: 0 14px; }
+  :root { --timecol: 40px; --gap: 22px; }
+  .top { position: static; }
+  .head {
+    column-gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand  ctrl"
+      "quotes quotes"
+      "search search"
+      "tabs   tabs";
+  }
+  .brand { font-size: 21px; padding: 12px 0 10px; }
+  .ctrl { margin-right: -8px; }
+  .ctrl .btn { padding: 5px 7px; }
+  .search { width: auto; margin: 12px 0 2px; }
+  .quotes { gap: 20px; }
+  .search kbd { display: none; }
+  .tabs { margin: 0 -10px; }
+  .title { font-size: 17.5px; }
+  .t { font-size: 13px; }
+  .panel { right: 14px; }
+  .notice { padding-left: 0; }
+  footer { padding-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .item.fresh::before { animation: none; }
+  .item.fresh::after { animation: none; opacity: .8; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap head">
+    <h1 class="brand">newsdash</h1>
+    <div class="quotes" id="quotes" aria-label="Market quotes, delayed"></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Categories"></div>
+    <div class="search">
+      <label class="vh" for="q">Search headlines</label>
+      <input id="q" type="search" placeholder="Search headlines or tickers" autocomplete="off" spellcheck="false">
+      <kbd aria-hidden="true">/</kbd>
+    </div>
+    <div class="ctrl">
+      <button class="btn status" id="statusBtn" data-s="load" aria-expanded="false" aria-controls="panel">
+        <span class="dot" aria-hidden="true"></span><span id="statusText">Loading</span>
+      </button>
+      <button class="btn" id="pauseBtn" aria-pressed="false">Pause</button>
+      <button class="btn" id="themeBtn">Light</button>
+    </div>
+    <section class="panel" id="panel" hidden aria-label="Sources and updates">
+      <h2>Sources</h2>
+      <p class="sub" id="panelSub"></p>
+      <div class="actions">
+        <button class="btn" id="checkNow">Check for updates now</button>
+      </div>
+      <ul class="src-list" id="srcList"></ul>
+      <p class="fine" id="panelFine"></p>
+    </section>
+  </div>
+</header>
+
+<button class="pill" id="pill" hidden></button>
+
+<main class="wrap">
+  <div id="notice"></div>
+  <div class="feed" id="feed" role="feed" aria-live="off"></div>
+</main>
+<footer class="wrap" id="footer" hidden>Headlines link to their publishers. Quotes are delayed.</footer>
+
+<script>
+/* ======================================================================
+   Settings. dataUrl can stay empty on GitHub Pages: the page works out
+   https://raw.githubusercontent.com/<owner>/<repo>/data/news.json itself.
+   Fill it in only for a custom domain. ?data=<url> overrides both.
+   ====================================================================== */
+const CONFIG = {
+  dataUrl: "",
+  pollSeconds: 60,
+  lateAfterMinutes: 20,
+  staleAfterMinutes: 90,
+};
+
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    quotes: $("quotes"), tabs: $("tabs"), q: $("q"), feed: $("feed"), notice: $("notice"),
+    pill: $("pill"), statusBtn: $("statusBtn"), statusText: $("statusText"), pauseBtn: $("pauseBtn"),
+    themeBtn: $("themeBtn"), panel: $("panel"), panelSub: $("panelSub"), srcList: $("srcList"),
+    panelFine: $("panelFine"), checkNow: $("checkNow"), footer: $("footer"),
+  };
+
+  const store = {
+    get(k) { try { return localStorage.getItem("newsdash:" + k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem("newsdash:" + k, v); } catch { /* storage unavailable */ } },
+  };
+
+  const DATA_URL = resolveDataUrl();
+
+  const state = {
+    doc: null,            // document currently shown
+    pending: null,        // newer document waiting while the reader is scrolled down
+    items: [],
+    byId: new Map(),
+    known: new Set(),
+    visited: new Set(JSON.parse(store.get("visited") || "[]")),
+    cat: store.get("cat") || "all",
+    query: "",
+    paused: false,
+    lastAttempt: 0,
+    lastError: null,      // {kind: 'nodata' | 'http' | 'network', message}
+    nextPollAt: 0,
+    timer: null,
+  };
+
+  const nodes = new Map();   // key -> element, reused across renders
+  const catIndex = new Map();
+
+  /* ------------------------------------------------------------ helpers */
+  function resolveDataUrl() {
+    const param = new URLSearchParams(location.search).get("data");
+    if (param) return param;
+    if (CONFIG.dataUrl) return CONFIG.dataUrl;
+    const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
+    if (!m) return "news.json";
+    const owner = m[1];
+    const first = location.pathname.split("/").filter(Boolean)[0];
+    const repo = first && !/\.html?$/i.test(first) ? first : `${owner}.github.io`;
+    return `https://raw.githubusercontent.com/${owner}/${repo}/data/news.json`;
+  }
+
+  const fmtTime = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const fmtDay = new Intl.DateTimeFormat(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const dayKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
+  function dayLabel(d) {
+    const today = new Date();
+    const y = new Date(); y.setDate(today.getDate() - 1);
+    if (dayKey(d) === dayKey(today)) return "Today";
+    if (dayKey(d) === dayKey(y)) return "Yesterday, " + fmtDay.format(d);
+    return fmtDay.format(d);
+  }
+
+  function ago(iso) {
+    const mins = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins} min ago`;
+    const h = Math.floor(mins / 60);
+    if (h < 24) return `${h} h ago`;
+    return `${Math.floor(h / 24)} d ago`;
+  }
+
+  function safeHref(url) {
+    try {
+      const u = new URL(url);
+      return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+    } catch { return null; }
+  }
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function catVar(cat) {
+    const i = catIndex.has(cat) ? catIndex.get(cat) : 5;
+    return `var(--cat-${i % 6})`;
+  }
+
+  /* ------------------------------------------------------------- theme */
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    els.themeBtn.textContent = t === "dark" ? "Light" : "Dark";
+    els.themeBtn.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
+  }
+  applyTheme(store.get("theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
+  els.themeBtn.addEventListener("click", () => {
+    const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(t); store.set("theme", t);
+  });
+
+  /* ----------------------------------------------------------- polling */
+  function schedule(delaySec = CONFIG.pollSeconds) {
+    clearTimeout(state.timer);
+    if (state.paused || document.hidden) { state.nextPollAt = 0; return; }
+    state.nextPollAt = Date.now() + delaySec * 1000;
+    state.timer = setTimeout(poll, delaySec * 1000);
+  }
+
+  async function poll() {
+    clearTimeout(state.timer);
+    state.lastAttempt = Date.now();
+    try {
+      const sep = DATA_URL.includes("?") ? "&" : "?";
+      const res = await fetch(`${DATA_URL}${sep}t=${Date.now()}`, { cache: "no-store" });
+      if (res.status === 404) {
+        state.lastError = { kind: "nodata", message: "HTTP 404" };
+      } else if (!res.ok) {
+        state.lastError = { kind: "http", message: `HTTP ${res.status}` };
+      } else {
+        const doc = await res.json();
+        state.lastError = null;
+        receive(doc);
+      }
+    } catch (err) {
+      state.lastError = { kind: "network", message: err && err.message ? err.message : "network error" };
+    }
+    renderNotice();
+    renderStatus();
+    schedule();
+  }
+
+  function receive(doc) {
+    if (!doc || !Array.isArray(doc.items)) {
+      state.lastError = { kind: "http", message: "unexpected data format" };
+      return;
+    }
+    const current = state.pending || state.doc;
+    if (current && current.generated_at === doc.generated_at) return;
+
+    // quotes and source health are small, in-place updates: apply immediately
+    renderQuotes(doc.quotes || []);
+    renderPanel(doc);
+
+    const newIds = doc.items.filter((i) => !state.known.has(i.id)).map((i) => i.id);
+    if (!state.doc || newIds.length === 0 || nearTop()) {
+      apply(doc, state.doc ? newIds : []);
+    } else {
+      state.pending = doc;
+      showPill(newIds.length);
+    }
+  }
+
+  function apply(doc, freshIds) {
+    state.doc = doc;
+    state.pending = null;
+    els.pill.hidden = true;
+
+    catIndex.clear();
+    (doc.categories || []).forEach((c, i) => catIndex.set(c.id, i));
+
+    state.items = doc.items.slice().sort((a, b) => (b.published || "").localeCompare(a.published || ""));
+    state.byId = new Map(state.items.map((i) => [i.id, i]));
+    doc.items.forEach((i) => state.known.add(i.id));
+
+    const live = new Set(state.items.map((i) => i.id));
+    for (const key of nodes.keys()) if (!key.startsWith("day:") && !live.has(key)) nodes.delete(key);
+
+    const fresh = new Set(freshIds);
+    renderTabs();
+    renderFeed(fresh);
+    renderQuotes(doc.quotes || []);
+    renderPanel(doc);
+  }
+
+  const nearTop = () => window.scrollY < 140;
+
+  function showPill(n) {
+    els.pill.textContent = n === 1 ? "1 new headline" : `${n} new headlines`;
+    els.pill.style.top = `${Math.round(Math.max(0, document.querySelector(".top").getBoundingClientRect().bottom) + 12)}px`;
+    els.pill.hidden = false;
+  }
+
+  els.pill.addEventListener("click", () => {
+    const doc = state.pending;
+    if (!doc) return;
+    const newIds = doc.items.filter((i) => !state.known.has(i.id)).map((i) => i.id);
+    apply(doc, newIds);
+    window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  });
+
+  let scrollRaf = 0;
+  window.addEventListener("scroll", () => {
+    if (scrollRaf || !state.pending) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      if (state.pending && nearTop()) {
+        const doc = state.pending;
+        apply(doc, doc.items.filter((i) => !state.known.has(i.id)).map((i) => i.id));
+      }
+    });
+  }, { passive: true });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { clearTimeout(state.timer); state.nextPollAt = 0; renderStatus(); return; }
+    if (state.paused) return;
+    const since = (Date.now() - state.lastAttempt) / 1000;
+    if (since > 15) poll(); else schedule(CONFIG.pollSeconds - since);
+  });
+
+  els.pauseBtn.addEventListener("click", () => {
+    state.paused = !state.paused;
+    els.pauseBtn.textContent = state.paused ? "Resume" : "Pause";
+    els.pauseBtn.setAttribute("aria-pressed", String(state.paused));
+    if (state.paused) { clearTimeout(state.timer); state.nextPollAt = 0; renderStatus(); }
+    else poll();
+  });
+
+  els.checkNow.addEventListener("click", () => {
+    els.checkNow.disabled = true;
+    els.checkNow.textContent = "Checking";
+    poll().finally(() => {
+      els.checkNow.disabled = false;
+      els.checkNow.textContent = "Check for updates now";
+    });
+  });
+
+  /* ------------------------------------------------------------ filters */
+  function matches(item, cat, terms) {
+    if (cat !== "all" && item.category !== cat) return false;
+    if (!terms.length) return true;
+    const hay = [item.title, item.summary, item.source_name, ...(item.tickers || []), ...(item.tags || [])]
+      .join(" ").toLowerCase();
+    return terms.every((t) => hay.includes(t));
+  }
+
+  const terms = () => state.query.toLowerCase().split(/\s+/).filter(Boolean);
+
+  let searchTimer = 0;
+  els.q.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      state.query = els.q.value.trim();
+      renderTabs();
+      renderFeed(new Set());
+    }, 120);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault(); els.q.focus(); els.q.select();
+    } else if (e.key === "Escape") {
+      if (!els.panel.hidden) togglePanel(false);
+      else if (document.activeElement === els.q) {
+        els.q.value = ""; state.query = ""; renderTabs(); renderFeed(new Set()); els.q.blur();
+      }
+    }
+  });
+
+  /* -------------------------------------------------------------- tabs */
+  function renderTabs() {
+    const t = terms();
+    const cats = [{ id: "all", label: "All" }, ...((state.doc && state.doc.categories) || [])];
+    if (!cats.some((c) => c.id === state.cat)) state.cat = "all";
+
+    const counts = { all: 0 };
+    for (const it of state.items) {
+      if (!matches(it, "all", t)) continue;
+      counts.all++;
+      counts[it.category] = (counts[it.category] || 0) + 1;
+    }
+
+    const existing = new Map([...els.tabs.children].map((b) => [b.dataset.cat, b]));
+    const wanted = [];
+    for (const c of cats) {
+      let b = existing.get(c.id);
+      if (!b) {
+        b = el("button", "tab");
+        b.type = "button";
+        b.setAttribute("role", "tab");
+        b.setAttribute("aria-controls", "feed");
+        b.dataset.cat = c.id;
+        b.append(el("span", "l"), el("span", "n"));
+        b.addEventListener("click", () => {
+          state.cat = c.id; store.set("cat", c.id);
+          renderTabs(); renderFeed(new Set());
+        });
+      }
+      b.querySelector(".l").textContent = c.label;
+      b.querySelector(".n").textContent = counts[c.id] || 0;
+      b.style.setProperty("--c", c.id === "all" ? "var(--ink)" : catVar(c.id));
+      b.setAttribute("aria-selected", String(state.cat === c.id));
+      wanted.push(b);
+    }
+    reconcile(els.tabs, wanted);
+  }
+
+  /* -------------------------------------------------------------- feed */
+  function reconcile(parent, wantedNodes) {
+    const keep = new Set(wantedNodes);
+    for (const child of [...parent.children]) if (!keep.has(child)) child.remove();
+    let ref = parent.firstChild;
+    for (const n of wantedNodes) {
+      if (n === ref) ref = ref.nextSibling;
+      else parent.insertBefore(n, ref);
+    }
+  }
+
+  function renderFeed(fresh) {
+    if (!state.doc) return;
+    const t = terms();
+    const wanted = [];
+    let lastDay = null;
+
+    for (const it of state.items) {
+      if (!matches(it, state.cat, t)) continue;
+      const d = new Date(it.published || it.first_seen || Date.now());
+      const dk = dayKey(d);
+      if (dk !== lastDay) {
+        lastDay = dk;
+        const key = "day:" + dk;
+        let dn = nodes.get(key);
+        if (!dn) {
+          dn = el("div", "day");
+          dn.setAttribute("role", "separator");
+          dn.append(el("span", "day-label"));
+          nodes.set(key, dn);
+        }
+        dn.firstChild.textContent = dayLabel(d);
+        wanted.push(dn);
+      }
+      const node = itemNode(it, d, t);
+      if (fresh.has(it.id)) {
+        node.classList.remove("fresh");
+        void node.offsetWidth; // restart animation if re-flagged
+        node.classList.add("fresh");
+        setTimeout(() => node.classList.remove("fresh"), 9500);
+      }
+      wanted.push(node);
+    }
+    reconcile(els.feed, wanted);
+
+    if (!state.items.length) {
+      setNotice("empty", noticeBlock("No headlines yet",
+        "The update job ran, but no feed returned headlines. Open Sources (the status button at the top) to see which feeds failed."));
+    } else if (!wanted.length) {
+      const clear = () => { els.q.value = ""; state.query = ""; renderTabs(); renderFeed(new Set()); };
+      setNotice("empty", noticeBlock(
+        state.query ? `No headlines match “${state.query}”` : "Nothing in this category right now",
+        "Headlines from the last 48 hours are kept.",
+        state.query ? { label: "Clear search", onClick: clear } : null));
+    } else {
+      setNotice("", null);
+    }
+    els.footer.hidden = !wanted.length;
+  }
+
+  function itemNode(it, d, t) {
+    const sig = [it.title, it.summary, it.published, (it.tickers || []).join(), (it.tags || []).join(), it.category, t.join(" ")].join("\u0001");
+    let n = nodes.get(it.id);
+    if (n && n.dataset.sig === sig) {
+      n.querySelector(".ago").textContent = ago(it.published);
+      return n;
+    }
+    if (!n) {
+      n = el("article", "item");
+      n.dataset.id = it.id;
+      nodes.set(it.id, n);
+    }
+    n.dataset.sig = sig;
+    n.dataset.cat = it.category;
+    n.style.setProperty("--c", catVar(it.category));
+    n.classList.toggle("visited", state.visited.has(it.id));
+
+    const time = el("time", "t", fmtTime.format(d));
+    time.dateTime = it.published || "";
+
+    const body = el("div", "body");
+    const meta = el("div", "meta");
+    meta.append(el("span", "src", it.source_name || it.source), el("span", "ago", ago(it.published)));
+    for (const tk of it.tickers || []) meta.append(el("span", "chip", tk));
+    for (const tg of it.tags || []) meta.append(el("span", "chip tag", tg));
+
+    const href = safeHref(it.link);
+    const title = el(href ? "a" : "span", "title");
+    highlight(title, it.title, t);
+    if (href) {
+      title.href = href;
+      title.target = "_blank";
+      title.rel = "noopener noreferrer";
+      title.addEventListener("click", () => markVisited(it.id, n));
+      title.addEventListener("auxclick", () => markVisited(it.id, n));
+    }
+    body.append(meta, title);
+    if (it.summary) {
+      const p = el("p", "sum");
+      highlight(p, it.summary, t);
+      body.append(p);
+    }
+    n.replaceChildren(time, body);
+    return n;
+  }
+
+  function highlight(target, text, t) {
+    if (!t.length || !text) { target.textContent = text || ""; return; }
+    const esc = t.map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const re = new RegExp(`(${esc.join("|")})`, "gi");
+    const parts = text.split(re);
+    target.replaceChildren(...parts.map((p, i) => (i % 2 ? el("mark", null, p) : document.createTextNode(p))));
+  }
+
+  function markVisited(id, node) {
+    state.visited.add(id);
+    node.classList.add("visited");
+    const live = new Set(state.items.map((i) => i.id));
+    store.set("visited", JSON.stringify([...state.visited].filter((x) => live.has(x)).slice(-1000)));
+  }
+
+  /* ------------------------------------------------------------ quotes */
+  function renderQuotes(quotes) {
+    const existing = new Map([...els.quotes.children].map((q) => [q.dataset.sym, q]));
+    const wanted = [];
+    for (const q of quotes) {
+      if (q.price == null) continue;
+      let n = existing.get(q.symbol);
+      if (!n) {
+        n = el("div", "q");
+        n.dataset.sym = q.symbol;
+        n.append(el("span", "q-label"), el("span", "q-price"), el("span", "q-chg"));
+      }
+      const dec = Number.isInteger(q.decimals) ? q.decimals : 2;
+      const price = q.price.toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+      n.children[0].textContent = q.label;
+      n.children[1].textContent = price;
+      const chg = n.children[2];
+      if (q.change_pct == null) {
+        chg.textContent = ""; chg.className = "q-chg";
+      } else {
+        const pct = Math.abs(q.change_pct).toFixed(2);
+        const sign = q.change_pct > 0.004 ? "+" : q.change_pct < -0.004 ? "\u2212" : "";
+        chg.textContent = `${sign}${pct}%`;
+        chg.className = "q-chg " + (sign === "+" ? "up" : sign ? "down" : "");
+      }
+      n.classList.toggle("stale", !!q.stale);
+      const when = q.market_time ? `, market time ${fmtTime.format(new Date(q.market_time))}` : "";
+      n.title = `${q.label} ${price}${q.currency ? " " + q.currency : ""}${when}${q.stale ? ". Not refreshed on the last run." : ""}`;
+      wanted.push(n);
+    }
+    reconcile(els.quotes, wanted);
+  }
+
+  /* ------------------------------------------------------ status/panel */
+  function dataAgeMinutes() {
+    const doc = state.pending || state.doc;
+    return doc ? (Date.now() - Date.parse(doc.generated_at)) / 60000 : null;
+  }
+
+  function renderStatus() {
+    const age = dataAgeMinutes();
+    let s = "load", text = "Loading";
+    if (state.paused) {
+      s = "paused"; text = "Paused";
+    } else if (state.lastError && !state.doc) {
+      s = "err"; text = state.lastError.kind === "nodata" ? "No data yet" : "Can't load data";
+    } else if (age != null) {
+      text = `Updated ${ago((state.pending || state.doc).generated_at)}`;
+      s = age > CONFIG.staleAfterMinutes ? "stale" : age > CONFIG.lateAfterMinutes ? "late" : "ok";
+      if (state.lastError) { s = "err"; text = "Connection lost"; }
+    }
+    els.statusBtn.dataset.s = s;
+    els.statusText.textContent = text;
+    els.statusBtn.title = "Show sources and update details";
+    if (!els.panel.hidden) renderPanelSub();
+  }
+
+  function renderPanelSub() {
+    const doc = state.pending || state.doc;
+    const bits = [];
+    if (doc) {
+      const age = dataAgeMinutes();
+      bits.push(`Data from ${fmtTime.format(new Date(doc.generated_at))} (${ago(doc.generated_at)}).`);
+      if (age > CONFIG.staleAfterMinutes) bits.push("The update job hasn't run for a while. Check the Actions tab in your repository.");
+      else if (age > CONFIG.lateAfterMinutes) bits.push("GitHub's scheduler is running late; this usually catches up on its own.");
+    }
+    if (state.paused) bits.push("Automatic checks are paused.");
+    else if (state.nextPollAt) bits.push(`Next check in ${Math.max(0, Math.round((state.nextPollAt - Date.now()) / 1000))} s.`);
+    if (state.lastError) bits.push(`Last check failed: ${state.lastError.message}.`);
+    els.panelSub.textContent = bits.join(" ");
+  }
+
+  function renderPanel(doc) {
+    const rows = [];
+    for (const s of doc.sources || []) {
+      const li = el("li");
+      li.style.setProperty("--c", catVar(s.category));
+      let st;
+      if (s.status === "disabled") { st = "Off (no API key)"; li.classList.add("off"); }
+      else if (!s.ok) { st = `Failed: ${s.error || "unknown error"}`; li.classList.add("bad"); }
+      else if (s.status === "not_modified") st = "No changes";
+      else st = s.fetched === 1 ? "1 headline" : `${s.fetched} headlines`;
+      li.append(el("span", "sw"), el("span", "nm", s.name), el("span", "st", st));
+      if (!s.ok && s.last_ok) li.title = `Last worked ${ago(s.last_ok)}`;
+      rows.push(li);
+    }
+    const stale = (doc.quotes || []).filter((q) => q.stale).map((q) => q.label);
+    const qli = el("li");
+    qli.style.setProperty("--c", "var(--ink-3)");
+    qli.append(el("span", "sw"), el("span", "nm", "Quotes (Yahoo)"),
+      el("span", "st", stale.length ? `Not refreshed: ${stale.join(", ")}` : `${(doc.quotes || []).length} quotes`));
+    if (stale.length) qli.classList.add("bad");
+    rows.push(qli);
+    els.srcList.replaceChildren(...rows);
+    els.panelFine.textContent = `Reading ${DATA_URL}`;
+    renderPanelSub();
+  }
+
+  function togglePanel(open) {
+    els.panel.hidden = !open;
+    els.statusBtn.setAttribute("aria-expanded", String(open));
+    if (open) renderPanelSub();
+  }
+  els.statusBtn.addEventListener("click", (e) => { e.stopPropagation(); togglePanel(els.panel.hidden); });
+  document.addEventListener("click", (e) => {
+    if (!els.panel.hidden && !els.panel.contains(e.target)) togglePanel(false);
+  });
+
+  /* ------------------------------------------------------------ notice */
+  function noticeBlock(heading, text, action) {
+    const box = el("div", "notice");
+    box.append(el("h2", null, heading));
+    if (typeof text === "string") box.append(el("p", null, text));
+    else box.append(text);
+    if (action) {
+      const b = el("button", "btn", action.label);
+      b.addEventListener("click", action.onClick);
+      box.append(b);
+    }
+    return box;
+  }
+
+  function setNotice(kind, block) {
+    els.notice.dataset.kind = kind;
+    if (block) els.notice.replaceChildren(block);
+    else els.notice.replaceChildren();
+  }
+
+  function renderNotice() {
+    if (state.doc) { if (els.notice.dataset.kind === "error") setNotice("", null); return; }
+    if (!state.lastError) return;
+    const retry = { label: "Try again now", onClick: poll };
+    let block;
+    if (state.lastError.kind === "nodata") {
+      const p = el("p");
+      p.append("The update job hasn't published anything yet. In your repository, open ",
+        el("b", null, "Actions"), ", choose ", el("b", null, "Update news"), " and select ",
+        el("b", null, "Run workflow"), ". The first run takes about a minute; this page picks it up automatically.");
+      const p2 = el("p");
+      p2.append("Looking for ", el("code", null, DATA_URL));
+      const frag = document.createDocumentFragment();
+      frag.append(p, p2);
+      block = noticeBlock("No news data yet", frag, retry);
+    } else {
+      const p = el("p");
+      p.append(`Couldn't load `, el("code", null, DATA_URL), ` (${state.lastError.message}). Retrying every ${CONFIG.pollSeconds} seconds.`);
+      block = noticeBlock("News data unavailable", p, retry);
+    }
+    setNotice("error", block);
+  }
+
+  /* ------------------------------------------------------------ clocks */
+  setInterval(() => {
+    renderStatus();
+    for (const n of els.feed.querySelectorAll(".item")) {
+      const it = state.byId.get(n.dataset.id);
+      if (it) n.querySelector(".ago").textContent = ago(it.published);
+    }
+  }, 30000);
+  setInterval(() => { if (!els.panel.hidden) renderPanelSub(); }, 1000);
+
+  poll();
+})();
+</script>
+</body>
+</html>
