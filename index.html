@@ -119,6 +119,8 @@ a { color: inherit; }
 .status { display: inline-flex; align-items: center; gap: 8px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
 .status[data-s="ok"] .dot { background: var(--up); }
+.status[data-s="busy"] .dot { background: var(--cat-4); animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .35; } }
 .status[data-s="late"] .dot { background: var(--cat-1); }
 .status[data-s="stale"] .dot, .status[data-s="err"] .dot { background: var(--down); }
 
@@ -156,6 +158,25 @@ a { color: inherit; }
   max-height: calc(100vh - 80px); overflow: auto;
 }
 .panel h2 { font: 600 17px/1.2 var(--serif); margin: 0 0 4px; }
+.panel h3 { font: 600 15.5px/1.2 var(--serif); margin: 16px 0 6px; }
+.panel .msg { font-size: 14px; margin: -4px 0 12px; padding: 7px 10px; border-radius: 6px; background: var(--bg); color: var(--ink); }
+.panel .msg[data-kind="bad"] { color: var(--down); }
+.panel .msg[data-kind="ok"] { color: var(--up); }
+.live { border-top: 1px solid var(--rule); padding-bottom: 4px; }
+.live .sub { margin-bottom: 8px; }
+.live details { font-size: 14px; color: var(--ink-2); margin: 0 0 10px; }
+.live summary { cursor: pointer; color: var(--ink); font-weight: 600; }
+.live ol { margin: 8px 0 0; padding-left: 20px; }
+.live li { margin: 3px 0; }
+.live li b { color: var(--ink); font-weight: 600; }
+.live a { color: var(--focus); }
+.tok { display: flex; gap: 8px; }
+.tok input {
+  flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 5px 9px; font-size: 14px;
+}
+.tok input:focus { outline: none; border-color: var(--focus); }
+.tok .btn, .live .btn { border-color: var(--rule); color: var(--ink); }
 .panel .sub { color: var(--ink-2); font-size: 14px; margin: 0 0 12px; }
 .panel .actions { display: flex; gap: 8px; margin-bottom: 12px; }
 .panel .actions .btn { border-color: var(--rule); color: var(--ink); }
@@ -277,7 +298,7 @@ footer { color: var(--ink-3); font-size: 13px; padding: 0 0 40px calc(var(--time
   footer { padding-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .item.fresh::before { animation: none; }
+  .item.fresh::before, .status[data-s="busy"] .dot { animation: none; }
   .item.fresh::after { animation: none; opacity: .8; }
 }
 </style>
@@ -300,12 +321,40 @@ footer { color: var(--ink-3); font-size: 13px; padding: 0 0 40px calc(var(--time
       <button class="btn" id="pauseBtn" aria-pressed="false">Pause</button>
       <button class="btn" id="themeBtn">Light</button>
     </div>
-    <section class="panel" id="panel" hidden aria-label="Sources and updates">
-      <h2>Sources</h2>
+    <section class="panel" id="panel" hidden aria-label="Updates and sources">
+      <h2>Updates</h2>
       <p class="sub" id="panelSub"></p>
       <div class="actions">
-        <button class="btn" id="checkNow">Check for updates now</button>
+        <button class="btn" id="checkNow">Update now</button>
       </div>
+      <p class="msg" id="refreshMsg" role="status" hidden></p>
+      <div class="live" id="live">
+        <h3>Update on reload</h3>
+        <div id="liveOff">
+          <p class="sub">Save a GitHub token here and every reload starts a fresh fetch. New headlines slot in about a minute later.</p>
+          <details>
+            <summary>How to create the token</summary>
+            <ol>
+              <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">GitHub's new fine-grained token page</a>.</li>
+              <li>Name it (e.g. <b>newsdash</b>) and pick an expiration.</li>
+              <li>Repository access: <b>Only select repositories</b>, then choose <b id="repoName">this repository</b>.</li>
+              <li>Permissions: add <b>Actions</b> and set it to <b>Read and write</b>. Nothing else is needed.</li>
+              <li>Generate the token, copy it and paste it below.</li>
+            </ol>
+          </details>
+          <div class="tok">
+            <label class="vh" for="tokenInput">GitHub token</label>
+            <input id="tokenInput" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+            <button class="btn" id="tokenSave">Save</button>
+          </div>
+        </div>
+        <div id="liveOn" hidden>
+          <p class="sub">On. Reloading starts an update when the data is more than 2 minutes old. The token is stored in this browser only.</p>
+          <button class="btn" id="tokenRemove">Remove token</button>
+        </div>
+        <p class="sub" id="liveNA" hidden>Not available here: this page can't tell which GitHub repository it belongs to. Set <b>repo</b> at the top of the script in index.html.</p>
+      </div>
+      <h3>Sources</h3>
       <ul class="src-list" id="srcList"></ul>
       <p class="fine" id="panelFine"></p>
     </section>
@@ -328,6 +377,9 @@ footer { color: var(--ink-3); font-size: 13px; padding: 0 0 40px calc(var(--time
    ====================================================================== */
 const CONFIG = {
   dataUrl: "",
+  repo: "",                       // "owner/repo"; only needed with a custom domain
+  workflowFile: "update-news.yml",
+  refreshCooldownSeconds: 120,    // reloads within this window don't start another run
   pollSeconds: 60,
   lateAfterMinutes: 20,
   staleAfterMinutes: 90,
@@ -342,6 +394,8 @@ const CONFIG = {
     pill: $("pill"), statusBtn: $("statusBtn"), statusText: $("statusText"), pauseBtn: $("pauseBtn"),
     themeBtn: $("themeBtn"), panel: $("panel"), panelSub: $("panelSub"), srcList: $("srcList"),
     panelFine: $("panelFine"), checkNow: $("checkNow"), footer: $("footer"),
+    refreshMsg: $("refreshMsg"), liveOff: $("liveOff"), liveOn: $("liveOn"), liveNA: $("liveNA"),
+    tokenInput: $("tokenInput"), tokenSave: $("tokenSave"), tokenRemove: $("tokenRemove"), repoName: $("repoName"),
   };
 
   const store = {
@@ -350,6 +404,7 @@ const CONFIG = {
   };
 
   const DATA_URL = resolveDataUrl();
+  const REPO = resolveRepo();
 
   const state = {
     doc: null,            // document currently shown
@@ -365,6 +420,12 @@ const CONFIG = {
     lastError: null,      // {kind: 'nodata' | 'http' | 'network', message}
     nextPollAt: 0,
     timer: null,
+    token: store.get("token") || "",
+    tokenBad: false,
+    apiEtag: null,
+    defaultBranch: null,
+    dispatching: false,
+    watch: null,          // {since, baseline} while waiting for a run we started
   };
 
   const nodes = new Map();   // key -> element, reused across renders
@@ -381,6 +442,16 @@ const CONFIG = {
     const first = location.pathname.split("/").filter(Boolean)[0];
     const repo = first && !/\.html?$/i.test(first) ? first : `${owner}.github.io`;
     return `https://raw.githubusercontent.com/${owner}/${repo}/data/news.json`;
+  }
+
+  function resolveRepo() {
+    if (CONFIG.repo) {
+      const [owner, repo] = CONFIG.repo.split("/");
+      const m = DATA_URL.match(/^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/([^/?]+)\/([^?]+)/i);
+      return owner && repo ? { owner, repo, branch: m ? m[1] : "data", path: m ? m[2] : "news.json" } : null;
+    }
+    const m = DATA_URL.match(/^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/?]+)\/([^?]+)/i);
+    return m ? { owner: m[1], repo: m[2], branch: m[3], path: m[4] } : null;
   }
 
   const fmtTime = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -436,35 +507,195 @@ const CONFIG = {
   });
 
   /* ----------------------------------------------------------- polling */
-  function schedule(delaySec = CONFIG.pollSeconds) {
+  function schedule(delaySec = state.watch ? 8 : CONFIG.pollSeconds) {
     clearTimeout(state.timer);
     if (state.paused || document.hidden) { state.nextPollAt = 0; return; }
     state.nextPollAt = Date.now() + delaySec * 1000;
     state.timer = setTimeout(poll, delaySec * 1000);
   }
 
+  const hasToken = () => !!(state.token && !state.tokenBad && REPO);
+  const currentStamp = () => (state.pending || state.doc || {}).generated_at || null;
+
+  // Reads news.json. With a token it goes through GitHub's API, which isn't
+  // CDN-cached; without one it uses raw.githubusercontent.com, which can be
+  // up to about five minutes behind.
+  async function fetchDoc() {
+    if (hasToken()) {
+      const path = REPO.path.split("/").map(encodeURIComponent).join("/");
+      try {
+        const res = await gh(`/contents/${path}?ref=${encodeURIComponent(REPO.branch)}`,
+          { accept: "application/vnd.github.raw+json", etag: state.apiEtag });
+        if (res.status === 304) return { unchanged: true };
+        if (res.status === 404) return { nodata: true };
+        if (res.ok) {
+          state.apiEtag = res.headers.get("ETag");
+          return { doc: await res.json() };
+        }
+        if (res.status === 401) setRefreshMsg((await ghError(res)).message, "bad"); // also marks the token as bad
+      } catch { /* fall through to the public file */ }
+    }
+    const sep = DATA_URL.includes("?") ? "&" : "?";
+    const res = await fetch(`${DATA_URL}${sep}t=${Date.now()}`, { cache: "no-store" });
+    if (res.status === 404) return { nodata: true };
+    if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { kind: "http" });
+    return { doc: await res.json() };
+  }
+
   async function poll() {
     clearTimeout(state.timer);
     state.lastAttempt = Date.now();
     try {
-      const sep = DATA_URL.includes("?") ? "&" : "?";
-      const res = await fetch(`${DATA_URL}${sep}t=${Date.now()}`, { cache: "no-store" });
-      if (res.status === 404) {
-        state.lastError = { kind: "nodata", message: "HTTP 404" };
-      } else if (!res.ok) {
-        state.lastError = { kind: "http", message: `HTTP ${res.status}` };
-      } else {
-        const doc = await res.json();
-        state.lastError = null;
-        receive(doc);
-      }
+      const r = await fetchDoc();
+      state.lastError = r.nodata ? { kind: "nodata", message: "HTTP 404" } : null;
+      if (r.doc) receive(r.doc);
     } catch (err) {
-      state.lastError = { kind: "network", message: err && err.message ? err.message : "network error" };
+      state.lastError = { kind: err.kind || "network", message: err && err.message ? err.message : "network error" };
     }
+    checkWatch();
     renderNotice();
     renderStatus();
+    renderRefresh();
     schedule();
   }
+
+  /* ------------------------------------------------ on-demand updates */
+  function gh(path, { method = "GET", body, accept = "application/vnd.github+json", etag } = {}) {
+    const headers = { Accept: accept, Authorization: `Bearer ${state.token}` };
+    if (body) headers["Content-Type"] = "application/json";
+    if (etag) headers["If-None-Match"] = etag;
+    return fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.repo}${path}`, {
+      method, headers, cache: "no-store", body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  async function ghError(res) {
+    const repo = `${REPO.owner}/${REPO.repo}`;
+    if (res.status === 401) {
+      state.tokenBad = true;
+      return new Error("GitHub rejected the saved token. It may have expired or been deleted. Paste a new one below.");
+    }
+    if (res.status === 403 && res.headers.get("x-ratelimit-remaining") === "0") {
+      return new Error("GitHub's request limit for this token is used up. Try again in a few minutes.");
+    }
+    if (res.status === 403) {
+      return new Error(`The token isn't allowed to start workflows in ${repo}. Give it the Actions permission with Read and write, and make sure ${repo} is one of its repositories.`);
+    }
+    if (res.status === 404) {
+      return new Error(`GitHub couldn't find .github/workflows/${CONFIG.workflowFile} in ${repo}, or the token doesn't include that repository.`);
+    }
+    if (res.status === 422) {
+      return new Error(`GitHub refused to start the workflow. Check that ${CONFIG.workflowFile} still contains workflow_dispatch.`);
+    }
+    return new Error(`GitHub returned HTTP ${res.status} while starting the update.`);
+  }
+
+  // Starts the update workflow unless one is already queued or running,
+  // then polls every few seconds until newer data shows up.
+  async function requestFresh(force) {
+    if (!hasToken() || state.watch || state.dispatching) return;
+    const age = dataAgeMinutes();
+    if (!force && age != null && age * 60 < CONFIG.refreshCooldownSeconds) return;
+
+    state.dispatching = true;
+    setRefreshMsg("");
+    renderStatus(); renderRefresh();
+    try {
+      const wf = encodeURIComponent(CONFIG.workflowFile);
+      const runsRes = await gh(`/actions/workflows/${wf}/runs?per_page=5`);
+      if (!runsRes.ok) throw await ghError(runsRes);
+      const runs = (await runsRes.json()).workflow_runs || [];
+      const active = runs.some((r) => r.status && r.status !== "completed");
+      if (!active) {
+        if (!state.defaultBranch) {
+          const repoRes = await gh("");
+          if (!repoRes.ok) throw await ghError(repoRes);
+          state.defaultBranch = (await repoRes.json()).default_branch || "main";
+        }
+        const d = await gh(`/actions/workflows/${wf}/dispatches`, { method: "POST", body: { ref: state.defaultBranch } });
+        if (!d.ok) throw await ghError(d);
+      }
+      state.watch = { since: Date.now(), baseline: currentStamp() };
+      setRefreshMsg(active
+        ? "An update is already running. New headlines appear here when it finishes."
+        : "Update started. New headlines usually appear within a minute.");
+      schedule(5);
+    } catch (err) {
+      setRefreshMsg(err.message || "Couldn't start the update.", "bad");
+    } finally {
+      state.dispatching = false;
+      renderStatus(); renderRefresh();
+    }
+  }
+
+  function checkWatch() {
+    if (!state.watch) return;
+    const stamp = currentStamp();
+    if (stamp && stamp !== state.watch.baseline) {
+      state.watch = null;
+      setRefreshMsg(`Updated at ${fmtTime.format(new Date(stamp))}.`, "ok");
+    } else if (Date.now() - state.watch.since > 4 * 60000) {
+      state.watch = null;
+      setRefreshMsg("The update hasn't finished after 4 minutes. Open the Actions tab in your repository to see what's holding it up.", "bad");
+    }
+  }
+
+  function setRefreshMsg(text, kind = "") {
+    els.refreshMsg.textContent = text;
+    els.refreshMsg.dataset.kind = kind;
+    els.refreshMsg.hidden = !text;
+  }
+
+  function renderRefresh() {
+    els.liveNA.hidden = !!REPO;
+    els.liveOff.hidden = !REPO || hasToken();
+    els.liveOn.hidden = !REPO || !hasToken();
+    if (REPO) els.repoName.textContent = `${REPO.owner}/${REPO.repo}`;
+
+    const b = els.checkNow;
+    if (state.dispatching) { b.disabled = true; b.textContent = "Starting update"; }
+    else if (state.watch) {
+      b.disabled = true;
+      b.textContent = `Updating (${Math.round((Date.now() - state.watch.since) / 1000)} s)`;
+    } else { b.disabled = false; b.textContent = hasToken() ? "Update now" : "Check for new data"; }
+  }
+
+  els.checkNow.addEventListener("click", async () => {
+    if (hasToken()) { requestFresh(true); return; }
+    els.checkNow.disabled = true;
+    els.checkNow.textContent = "Checking";
+    const before = currentStamp();
+    await poll();
+    const after = currentStamp();
+    if (state.lastError && state.lastError.kind !== "nodata") {
+      setRefreshMsg(`Couldn't load the data: ${state.lastError.message}.`, "bad");
+    } else if (after && after !== before) {
+      setRefreshMsg(`Loaded newer data from ${fmtTime.format(new Date(after))}.`, "ok");
+    } else if (after) {
+      setRefreshMsg(`No newer data yet. You're seeing the update from ${fmtTime.format(new Date(after))}; the next scheduled one usually arrives within 5–15 minutes. To fetch on demand, save a token below.`);
+    } else {
+      setRefreshMsg("No data has been published yet. Run the Update news workflow once in the Actions tab.");
+    }
+    renderRefresh();
+  });
+
+  els.tokenSave.addEventListener("click", async () => {
+    const t = els.tokenInput.value.trim();
+    if (t.length < 20) { setRefreshMsg("That doesn't look like a GitHub token. It should start with github_pat_.", "bad"); return; }
+    state.token = t; state.tokenBad = false; state.apiEtag = null;
+    store.set("token", t);
+    els.tokenInput.value = "";
+    renderRefresh();
+    await requestFresh(true);
+  });
+  els.tokenInput.addEventListener("keydown", (e) => { if (e.key === "Enter") els.tokenSave.click(); });
+
+  els.tokenRemove.addEventListener("click", () => {
+    state.token = ""; state.tokenBad = false; state.apiEtag = null; state.watch = null;
+    try { localStorage.removeItem("newsdash:token"); } catch { /* ignore */ }
+    setRefreshMsg("Token removed from this browser. To revoke it completely, delete it on GitHub too.");
+    renderRefresh(); renderStatus();
+  });
 
   function receive(doc) {
     if (!doc || !Array.isArray(doc.items)) {
@@ -550,15 +781,6 @@ const CONFIG = {
     els.pauseBtn.setAttribute("aria-pressed", String(state.paused));
     if (state.paused) { clearTimeout(state.timer); state.nextPollAt = 0; renderStatus(); }
     else poll();
-  });
-
-  els.checkNow.addEventListener("click", () => {
-    els.checkNow.disabled = true;
-    els.checkNow.textContent = "Checking";
-    poll().finally(() => {
-      els.checkNow.disabled = false;
-      els.checkNow.textContent = "Check for updates now";
-    });
   });
 
   /* ------------------------------------------------------------ filters */
@@ -797,11 +1019,14 @@ const CONFIG = {
     let s = "load", text = "Loading";
     if (state.paused) {
       s = "paused"; text = "Paused";
+    } else if (state.dispatching || state.watch) {
+      s = "busy"; text = "Updating headlines";
     } else if (state.lastError && !state.doc) {
       s = "err"; text = state.lastError.kind === "nodata" ? "No data yet" : "Can't load data";
     } else if (age != null) {
       text = `Updated ${ago((state.pending || state.doc).generated_at)}`;
       s = age > CONFIG.staleAfterMinutes ? "stale" : age > CONFIG.lateAfterMinutes ? "late" : "ok";
+      if (state.tokenBad) { s = "late"; text = "Token needs renewing"; }
       if (state.lastError) { s = "err"; text = "Connection lost"; }
     }
     els.statusBtn.dataset.s = s;
@@ -821,8 +1046,9 @@ const CONFIG = {
     }
     if (state.paused) bits.push("Automatic checks are paused.");
     else if (state.nextPollAt) bits.push(`Next check in ${Math.max(0, Math.round((state.nextPollAt - Date.now()) / 1000))} s.`);
-    if (state.lastError) bits.push(`Last check failed: ${state.lastError.message}.`);
+    if (state.lastError && state.lastError.kind !== "nodata") bits.push(`Last check failed: ${state.lastError.message}.`);
     els.panelSub.textContent = bits.join(" ");
+    renderRefresh();
   }
 
   function renderPanel(doc) {
@@ -847,7 +1073,9 @@ const CONFIG = {
     if (stale.length) qli.classList.add("bad");
     rows.push(qli);
     els.srcList.replaceChildren(...rows);
-    els.panelFine.textContent = `Reading ${DATA_URL}`;
+    els.panelFine.textContent = hasToken()
+      ? `Reading ${REPO.path} from the ${REPO.branch} branch of ${REPO.owner}/${REPO.repo} via GitHub's API`
+      : `Reading ${DATA_URL}`;
     renderPanelSub();
   }
 
@@ -914,7 +1142,8 @@ const CONFIG = {
   }, 30000);
   setInterval(() => { if (!els.panel.hidden) renderPanelSub(); }, 1000);
 
-  poll();
+  renderRefresh();
+  poll().then(() => requestFresh(false));
 })();
 </script>
 </body>
