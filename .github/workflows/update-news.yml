@@ -1,0 +1,54 @@
+name: Update news
+
+on:
+  schedule:
+    # every 5 minutes (GitHub's minimum). Offset from :00 because the top of
+    # the hour is when GitHub's scheduler is most congested and runs get delayed.
+    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - feeds.json
+      - fetch_news.py
+      - .github/workflows/update-news.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-news
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out config and script
+        uses: actions/checkout@v5
+
+      - name: Load previous data
+        run: |
+          if git fetch --depth=1 origin data 2>/dev/null; then
+            git show FETCH_HEAD:news.json > prev.json 2>/dev/null || true
+          fi
+          ls -l prev.json 2>/dev/null || echo "no previous data (first run)"
+
+      - name: Fetch feeds
+        env:
+          BENZINGA_API_KEY: ${{ secrets.BENZINGA_API_KEY }}
+        run: python3 fetch_news.py --config feeds.json --prev prev.json --out out/news.json
+
+      - name: Publish to data branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add news.json
+          git commit -q -m "news $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # single-commit branch, force-pushed: history never grows
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
