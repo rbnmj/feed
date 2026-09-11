@@ -171,6 +171,8 @@ a { color: inherit; }
 .live li b { color: var(--ink); font-weight: 600; }
 .live a { color: var(--focus); }
 .tok { display: flex; gap: 8px; }
+.switch { display: flex; align-items: flex-start; gap: 9px; font-size: 15px; color: var(--ink); margin: 2px 0 6px; cursor: pointer; }
+.switch input { accent-color: var(--cat-4); width: 16px; height: 16px; margin: 2px 0 0; flex: none; }
 .tok input {
   flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--rule); border-radius: 6px;
   padding: 5px 9px; font-size: 14px;
@@ -329,9 +331,9 @@ footer { color: var(--ink-3); font-size: 13px; padding: 0 0 40px calc(var(--time
       </div>
       <p class="msg" id="refreshMsg" role="status" hidden></p>
       <div class="live" id="live">
-        <h3>Update on reload</h3>
+        <h3>Automatic updates</h3>
         <div id="liveOff">
-          <p class="sub">Save a GitHub token here and every reload starts a fresh fetch. New headlines slot in about a minute later.</p>
+          <p class="sub">Save a GitHub token here and this page fetches fresh headlines on its own every few minutes while it's open, and whenever you reload it.</p>
           <details>
             <summary>How to create the token</summary>
             <ol>
@@ -349,7 +351,8 @@ footer { color: var(--ink-3); font-size: 13px; padding: 0 0 40px calc(var(--time
           </div>
         </div>
         <div id="liveOn" hidden>
-          <p class="sub">On. Reloading starts an update when the data is more than 2 minutes old. The token is stored in this browser only.</p>
+          <label class="switch"><input type="checkbox" id="autoToggle"><span id="autoLabel">Update automatically while this page is open</span></label>
+          <p class="sub">Updates pause while the window is minimized or the tab is in the background, and catch up when you come back. Reloading also starts an update if the data is more than 2 minutes old. The token is stored in this browser only.</p>
           <button class="btn" id="tokenRemove">Remove token</button>
         </div>
         <p class="sub" id="liveNA" hidden>Not available here: this page can't tell which GitHub repository it belongs to. Set <b>repo</b> at the top of the script in index.html.</p>
@@ -380,6 +383,7 @@ const CONFIG = {
   repo: "",                       // "owner/repo"; only needed with a custom domain
   workflowFile: "update-news.yml",
   refreshCooldownSeconds: 120,    // reloads within this window don't start another run
+  autoUpdateMinutes: 5,           // with a saved token: start an update this often while the page is open (0 = never)
   pollSeconds: 60,
   lateAfterMinutes: 20,
   staleAfterMinutes: 90,
@@ -396,6 +400,7 @@ const CONFIG = {
     panelFine: $("panelFine"), checkNow: $("checkNow"), footer: $("footer"),
     refreshMsg: $("refreshMsg"), liveOff: $("liveOff"), liveOn: $("liveOn"), liveNA: $("liveNA"),
     tokenInput: $("tokenInput"), tokenSave: $("tokenSave"), tokenRemove: $("tokenRemove"), repoName: $("repoName"),
+    autoToggle: $("autoToggle"), autoLabel: $("autoLabel"),
   };
 
   const store = {
@@ -426,6 +431,9 @@ const CONFIG = {
     defaultBranch: null,
     dispatching: false,
     watch: null,          // {since, baseline} while waiting for a run we started
+    auto: store.get("auto") !== "0",
+    autoBackoffUntil: 0,  // after a failure, automatic updates wait until this time
+    autoError: null,
   };
 
   const nodes = new Map();   // key -> element, reused across renders
@@ -592,13 +600,13 @@ const CONFIG = {
 
   // Starts the update workflow unless one is already queued or running,
   // then polls every few seconds until newer data shows up.
-  async function requestFresh(force) {
+  async function requestFresh(force, minAgeSeconds = CONFIG.refreshCooldownSeconds, auto = false) {
     if (!hasToken() || state.watch || state.dispatching) return;
     const age = dataAgeMinutes();
-    if (!force && age != null && age * 60 < CONFIG.refreshCooldownSeconds) return;
+    if (!force && age != null && age * 60 < minAgeSeconds) return;
 
     state.dispatching = true;
-    setRefreshMsg("");
+    if (!auto) setRefreshMsg("");
     renderStatus(); renderRefresh();
     try {
       const wf = encodeURIComponent(CONFIG.workflowFile);
@@ -615,13 +623,23 @@ const CONFIG = {
         const d = await gh(`/actions/workflows/${wf}/dispatches`, { method: "POST", body: { ref: state.defaultBranch } });
         if (!d.ok) throw await ghError(d);
       }
-      state.watch = { since: Date.now(), baseline: currentStamp() };
-      setRefreshMsg(active
-        ? "An update is already running. New headlines appear here when it finishes."
-        : "Update started. New headlines usually appear within a minute.");
+      state.watch = { since: Date.now(), baseline: currentStamp(), auto };
+      state.autoError = null;
+      if (!auto) {
+        setRefreshMsg(active
+          ? "An update is already running. New headlines appear here when it finishes."
+          : "Update started. New headlines usually appear within a minute.");
+      }
       schedule(5);
     } catch (err) {
-      setRefreshMsg(err.message || "Couldn't start the update.", "bad");
+      const msg = err.message || "Couldn't start the update.";
+      if (auto) {
+        state.autoError = msg;
+        state.autoBackoffUntil = Date.now() + 10 * 60000;
+        setRefreshMsg(`Automatic update failed: ${msg} Automatic updates try again in 10 minutes.`, "bad");
+      } else {
+        setRefreshMsg(msg, "bad");
+      }
     } finally {
       state.dispatching = false;
       renderStatus(); renderRefresh();
@@ -632,12 +650,39 @@ const CONFIG = {
     if (!state.watch) return;
     const stamp = currentStamp();
     if (stamp && stamp !== state.watch.baseline) {
+      const wasAuto = state.watch.auto;
       state.watch = null;
-      setRefreshMsg(`Updated at ${fmtTime.format(new Date(stamp))}.`, "ok");
+      if (wasAuto) setRefreshMsg("");
+      else setRefreshMsg(`Updated at ${fmtTime.format(new Date(stamp))}.`, "ok");
     } else if (Date.now() - state.watch.since > 4 * 60000) {
       state.watch = null;
-      setRefreshMsg("The update hasn't finished after 4 minutes. Open the Actions tab in your repository to see what's holding it up.", "bad");
+      state.autoError = "update didn't finish";
+      state.autoBackoffUntil = Date.now() + 15 * 60000;
+      setRefreshMsg("The update hasn't finished after 4 minutes. Open the Actions tab in your repository to see what's holding it up. Automatic updates pause for 15 minutes.", "bad");
     }
+  }
+
+  const autoEnabled = () => hasToken() && state.auto && CONFIG.autoUpdateMinutes > 0;
+
+  // Runs every 15 s. Triggers on data age, not a fixed timer, so a run that
+  // was started elsewhere (schedule, another window, a reload) resets the clock.
+  function maybeAutoUpdate() {
+    if (!autoEnabled() || state.paused || document.hidden) return;
+    if (state.watch || state.dispatching || Date.now() < state.autoBackoffUntil) return;
+    if (!state.doc && !state.lastError) return; // first load still in progress
+    requestFresh(false, CONFIG.autoUpdateMinutes * 60 - 15, true);
+  }
+  setInterval(maybeAutoUpdate, 15000);
+
+  function nextAutoText() {
+    if (!autoEnabled() || state.paused || state.watch || state.dispatching) return "";
+    if (document.hidden) return "Automatic updates are waiting for this window to be visible.";
+    if (Date.now() < state.autoBackoffUntil) return `Automatic updates resume at ${fmtTime.format(new Date(state.autoBackoffUntil))}.`;
+    const stamp = currentStamp();
+    if (!stamp) return "";
+    const due = Date.parse(stamp) + CONFIG.autoUpdateMinutes * 60000 - 15000;
+    const mins = Math.ceil((due - Date.now()) / 60000);
+    return mins <= 1 ? "Next automatic update within a minute." : `Next automatic update in ${mins} min.`;
   }
 
   function setRefreshMsg(text, kind = "") {
@@ -651,6 +696,11 @@ const CONFIG = {
     els.liveOff.hidden = !REPO || hasToken();
     els.liveOn.hidden = !REPO || !hasToken();
     if (REPO) els.repoName.textContent = `${REPO.owner}/${REPO.repo}`;
+    els.autoToggle.checked = state.auto;
+    els.autoLabel.textContent = CONFIG.autoUpdateMinutes > 0
+      ? `Update every ${CONFIG.autoUpdateMinutes} minutes while this page is open`
+      : "Automatic updates are switched off in the page settings";
+    els.autoToggle.disabled = !(CONFIG.autoUpdateMinutes > 0);
 
     const b = els.checkNow;
     if (state.dispatching) { b.disabled = true; b.textContent = "Starting update"; }
@@ -683,6 +733,7 @@ const CONFIG = {
     const t = els.tokenInput.value.trim();
     if (t.length < 20) { setRefreshMsg("That doesn't look like a GitHub token. It should start with github_pat_.", "bad"); return; }
     state.token = t; state.tokenBad = false; state.apiEtag = null;
+    state.autoError = null; state.autoBackoffUntil = 0;
     store.set("token", t);
     els.tokenInput.value = "";
     renderRefresh();
@@ -690,8 +741,19 @@ const CONFIG = {
   });
   els.tokenInput.addEventListener("keydown", (e) => { if (e.key === "Enter") els.tokenSave.click(); });
 
+  els.autoToggle.addEventListener("change", () => {
+    state.auto = els.autoToggle.checked;
+    store.set("auto", state.auto ? "1" : "0");
+    state.autoError = null;
+    state.autoBackoffUntil = 0;
+    setRefreshMsg("");
+    renderStatus();
+    maybeAutoUpdate();
+  });
+
   els.tokenRemove.addEventListener("click", () => {
     state.token = ""; state.tokenBad = false; state.apiEtag = null; state.watch = null;
+    state.autoError = null; state.autoBackoffUntil = 0;
     try { localStorage.removeItem("newsdash:token"); } catch { /* ignore */ }
     setRefreshMsg("Token removed from this browser. To revoke it completely, delete it on GitHub too.");
     renderRefresh(); renderStatus();
@@ -772,7 +834,7 @@ const CONFIG = {
     if (document.hidden) { clearTimeout(state.timer); state.nextPollAt = 0; renderStatus(); return; }
     if (state.paused) return;
     const since = (Date.now() - state.lastAttempt) / 1000;
-    if (since > 15) poll(); else schedule(CONFIG.pollSeconds - since);
+    if (since > 15) poll().then(maybeAutoUpdate); else { schedule(CONFIG.pollSeconds - since); maybeAutoUpdate(); }
   });
 
   els.pauseBtn.addEventListener("click", () => {
@@ -1027,6 +1089,7 @@ const CONFIG = {
       text = `Updated ${ago((state.pending || state.doc).generated_at)}`;
       s = age > CONFIG.staleAfterMinutes ? "stale" : age > CONFIG.lateAfterMinutes ? "late" : "ok";
       if (state.tokenBad) { s = "late"; text = "Token needs renewing"; }
+      else if (state.autoError && autoEnabled()) { s = "late"; text = "Automatic update failed"; }
       if (state.lastError) { s = "err"; text = "Connection lost"; }
     }
     els.statusBtn.dataset.s = s;
@@ -1046,6 +1109,8 @@ const CONFIG = {
     }
     if (state.paused) bits.push("Automatic checks are paused.");
     else if (state.nextPollAt) bits.push(`Next check in ${Math.max(0, Math.round((state.nextPollAt - Date.now()) / 1000))} s.`);
+    const autoText = nextAutoText();
+    if (autoText) bits.push(autoText);
     if (state.lastError && state.lastError.kind !== "nodata") bits.push(`Last check failed: ${state.lastError.message}.`);
     els.panelSub.textContent = bits.join(" ");
     renderRefresh();
