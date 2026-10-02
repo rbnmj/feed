@@ -18,7 +18,8 @@
     { "id": "cnbc_top",        "name": "CNBC",            "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114" },
     { "id": "cnbc_markets",    "name": "CNBC Markets",    "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258" },
     { "id": "deutsche_boerse", "name": "Deutsche Börse",  "category": "markets",     "url": "https://api.boerse-frankfurt.de/v1/feeds/news.rss" },
-    { "id": "yahoo_finance",   "name": "Yahoo Finance",   "category": "markets",     "url": "https://finance.yahoo.com/news/rssindex" },
+    
+    { "id": "financial_juice", "name": "Financial Juice", "category": "wire",     "url": "https://www.financialjuice.com/feed.ashx?xy=rss" },
 
     { "id": "bbc_world",       "name": "BBC World",       "category": "geopolitics", "url": "https://feeds.bbci.co.uk/news/world/rss.xml" },
     { "id": "aljazeera",       "name": "Al Jazeera",      "category": "geopolitics", "url": "https://www.aljazeera.com/xml/rss/all.xml" },
