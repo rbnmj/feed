@@ -38,7 +38,7 @@
     { "id": "tm_research",  "name": "TM Research",  "category": "table.media", "url": "https://table.media/feeds/research.xml" },
     { "id": "tm_berlin",  "name": "TM Berlin",  "category": "table.media", "url": "https://table.media/feeds/berlin.xml" },
     { "id": "tm_esg",  "name": "TM ESG",  "category": "table.media", "url": "https://table.media/feeds/esg.xml" },
-    { "id": "tm_100",  "name": "TM 100 Headlines",  "category": "table.media", "url": "https://table.media/feeds/100-headlines.xml" },
+    { "id": "tm_100",  "name": "TM 100 Headlines",  "category": "table.media", "url": "https://table.media/feeds/100-headlines.xml" }
   ],
 
   "benzinga": {
