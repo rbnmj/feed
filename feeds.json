@@ -15,16 +15,30 @@
   "sources": [
     { "id": "cnbc_top",        "name": "CNBC",            "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114" },
     { "id": "cnbc_markets",    "name": "CNBC Markets",    "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258" },
-    { "id": "marketwatch_top", "name": "MarketWatch",     "category": "markets",     "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories" },
-    { "id": "marketwatch_rt",  "name": "MarketWatch Pulse","category": "markets",    "url": "https://feeds.content.dowjones.io/public/rss/mw_marketpulse" },
+    { "id": "deutsche_boerse",   "name": "Deutsche Börse",   "category": "markets",     "url": "https://api.boerse-frankfurt.de/v1/feeds/news.rss" },
     { "id": "yahoo_finance",   "name": "Yahoo Finance",   "category": "markets",     "url": "https://finance.yahoo.com/news/rssindex" },
 
     { "id": "bbc_world",       "name": "BBC World",       "category": "geopolitics", "url": "https://feeds.bbci.co.uk/news/world/rss.xml" },
     { "id": "aljazeera",       "name": "Al Jazeera",      "category": "geopolitics", "url": "https://www.aljazeera.com/xml/rss/all.xml" },
     { "id": "guardian_world",  "name": "The Guardian",    "category": "geopolitics", "url": "https://www.theguardian.com/world/rss" },
     { "id": "dw_world",        "name": "DW",              "category": "geopolitics", "url": "https://rss.dw.com/rdf/rss-en-world" },
-    { "id": "politico_eu",     "name": "POLITICO Europe", "category": "geopolitics", "url": "https://www.politico.eu/feed/" },
-    { "id": "foreign_policy",  "name": "Foreign Policy",  "category": "geopolitics", "url": "https://foreignpolicy.com/feed/" }
+    { "id": "foreign_policy",  "name": "Foreign Policy",  "category": "geopolitics", "url": "https://foreignpolicy.com/feed/" },
+    { "id": "ap_world",  "name": "AP World News",  "category": "geopolitics", "url": "http://associated-press.s3-website-us-east-1.amazonaws.com/world-news.xml" },
+
+    { "id": "br_kompakt",  "name": "Bundesregierung kompakt",  "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/1151242/feed.xml" },
+    { "id": "br_bulletin",  "name": "Bundesregierung Bulletin",  "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/2318648/feed.xml" },
+    { "id": "br_presse",  "name": "Bundesregierung Pressemitteilung",  "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/1151244/feed.xml" },
+    { "id": "bt_aktuell",  "name": "Bundestag Aktuelle Themen",  "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/aktuellethemen.rss" },
+    { "id": "bt_hib",  "name": "Bundestag Kurzmeldungen (hib)",  "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/hib.rss" },
+    { "id": "bt_presse",  "name": "Bundestag Pressemitteilungen",  "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/pressemitteilungen.rss" },
+
+    { "id": "tm_europe",  "name": "TM Europe",  "category": "table.media", "url": "https://table.media/feeds/europe.xml" },
+    { "id": "tm_security",  "name": "TM Security",  "category": "table.media", "url": "https://table.media/feeds/security.xml" },
+    { "id": "tm_climate",  "name": "TM Climate",  "category": "table.media", "url": "https://table.media/feeds/climate.xml" },
+    { "id": "tm_research",  "name": "TM Research",  "category": "table.media", "url": "https://table.media/feeds/research.xml" },
+    { "id": "tm_berlin",  "name": "TM Berlin",  "category": "table.media", "url": "https://table.media/feeds/berlin.xml" },
+    { "id": "tm_esg",  "name": "TM ESG",  "category": "table.media", "url": "https://table.media/feeds/esg.xml" },
+    { "id": "tm_100",  "name": "TM 100 Headlines",  "category": "table.media", "url": "https://table.media/feeds/100-headlines.xml" },
   ],
 
   "benzinga": {
