@@ -7,9 +7,11 @@
   },
 
   "categories": [
-    { "id": "markets",     "label": "Markets" },
-    { "id": "geopolitics", "label": "Geopolitics" },
-    { "id": "wire",        "label": "Wire" }
+    { "id": "markets",      "label": "Markets" },
+    { "id": "geopolitics",  "label": "World" },
+    { "id": "geopolitics",  "label": "DE" },
+    { "id": "table.media",  "label": "TM" },    
+    { "id": "wire",         "label": "Wire" }
   ],
 
   "sources": [
