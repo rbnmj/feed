@@ -35,7 +35,7 @@
     { "id": "bt_hib",      "name": "Bundestag Kurzmeldungen (hib)",    "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/hib.rss" },
     { "id": "bt_presse",   "name": "Bundestag Pressemitteilungen",     "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/pressemitteilungen.rss" },
     { "id": "bmukn",       "name": "BMUKN",                            "category": "deutschland", "url": "https://www.bundesumweltministerium.de/meldungen.rss" },
-    { "id": "bfn",       "name": "BfN",                                "category": "deutschland", "url": "bfn.de/feeds/news.rss" },
+    { "id": "bfn",         "name": "BfN",                              "category": "deutschland", "url": "https://www.bfn.de/feeds/news.rss" },
 
     { "id": "dg_env",         "name": "DG ENV",         "category": "ec", "url": "https://environment.ec.europa.eu/node/92/rss_en" },
     { "id": "dg_agri",        "name": "DG AGRI",        "category": "ec", "url": "https://agriculture.ec.europa.eu/node/2/rss_en" },
