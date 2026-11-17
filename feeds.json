@@ -10,7 +10,7 @@
     { "id": "markets",      "label": "Markets" },
     { "id": "geopolitics",  "label": "World" },
     { "id": "deutschland",  "label": "DE" },
-    { "id": "table.media",  "label": "TM" },    
+    { "id": "ec",           "label": "EC" },    
     { "id": "wire",         "label": "Wire" }
   ],
 
@@ -35,13 +35,9 @@
     { "id": "bt_hib",      "name": "Bundestag Kurzmeldungen (hib)",    "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/hib.rss" },
     { "id": "bt_presse",   "name": "Bundestag Pressemitteilungen",     "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/pressemitteilungen.rss" },
 
-    { "id": "tm_europe",   "name": "TM Europe",        "category": "table.media", "url": "https://table.media/feeds/europe.xml" },
-    { "id": "tm_security", "name": "TM Security",      "category": "table.media", "url": "https://table.media/feeds/security.xml" },
-    { "id": "tm_climate",  "name": "TM Climate",       "category": "table.media", "url": "https://table.media/feeds/climate.xml" },
-    { "id": "tm_research", "name": "TM Research",      "category": "table.media", "url": "https://table.media/feeds/research.xml" },
-    { "id": "tm_berlin",   "name": "TM Berlin",        "category": "table.media", "url": "https://table.media/feeds/berlin.xml" },
-    { "id": "tm_esg",      "name": "TM ESG",           "category": "table.media", "url": "https://table.media/feeds/esg.xml" },
-    { "id": "tm_100",      "name": "TM 100 Headlines", "category": "table.media", "url": "https://table.media/feeds/100-headlines.xml" }
+    { "id": "dg_env",         "name": "DG Env",         "category": "ec", "url": "https://environment.ec.europa.eu/node/92/rss_en" },
+    { "id": "news_release",   "name": "News Releases",  "category": "ec", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL" },
+    { "id": "eurastat_news",  "name": "Eurostat News",  "category": "ec", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_EURNEW" }
   ],
 
   "benzinga": {
