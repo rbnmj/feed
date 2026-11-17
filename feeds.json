@@ -34,8 +34,11 @@
     { "id": "bt_aktuell",  "name": "Bundestag Aktuelle Themen",        "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/aktuellethemen.rss" },
     { "id": "bt_hib",      "name": "Bundestag Kurzmeldungen (hib)",    "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/hib.rss" },
     { "id": "bt_presse",   "name": "Bundestag Pressemitteilungen",     "category": "deutschland", "url": "https://www.bundestag.de/static/appdata/includes/rss/pressemitteilungen.rss" },
+    { "id": "bmukn",       "name": "BMUKN",                            "category": "deutschland", "url": "https://www.bundesumweltministerium.de/meldungen.rss" },
+    { "id": "bfn",       "name": "BfN",                                "category": "deutschland", "url": "bfn.de/feeds/news.rss" },
 
-    { "id": "dg_env",         "name": "DG Env",         "category": "ec", "url": "https://environment.ec.europa.eu/node/92/rss_en" },
+    { "id": "dg_env",         "name": "DG ENV",         "category": "ec", "url": "https://environment.ec.europa.eu/node/92/rss_en" },
+    { "id": "dg_agri",        "name": "DG AGRI",        "category": "ec", "url": "https://agriculture.ec.europa.eu/node/2/rss_en" },
     { "id": "news_release",   "name": "News Releases",  "category": "ec", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL" },
     { "id": "eurastat_news",  "name": "Eurostat News",  "category": "ec", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_EURNEW" }
   ],
