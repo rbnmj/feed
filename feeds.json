@@ -28,8 +28,6 @@
     { "id": "dw_world",        "name": "DW",                 "category": "geopolitics", "url": "https://rss.dw.com/rdf/rss-en-world" },
     { "id": "foreign_policy",  "name": "Foreign Policy",     "category": "geopolitics", "url": "https://foreignpolicy.com/feed/" },
     { "id": "reuters",         "name": "Reuters",            "category": "geopolitics", "url": "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-GB&gl=GB&ceid=GB:en" },
-    { "id": "cw_global",       "name": "CrisisWatch Global", "category": "geopolitics", "url": "https://www.crisisgroup.org/rss/139" },
-    { "id": "cw_global_feed",  "name": "CrisisWatch Feed",   "category": "geopolitics", "url": "https://www.crisisgroup.org/rss" },
     
     { "id": "br_kompakt",  "name": "Bundesregierung kompakt",          "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/1151242/feed.xml" },
     { "id": "br_bulletin", "name": "Bundesregierung Bulletin",         "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/2318648/feed.xml" },
