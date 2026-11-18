@@ -23,10 +23,11 @@
 
     { "id": "bbc_world",       "name": "BBC World",       "category": "geopolitics", "url": "https://feeds.bbci.co.uk/news/world/rss.xml" },
     { "id": "aljazeera",       "name": "Al Jazeera",      "category": "geopolitics", "url": "https://www.aljazeera.com/xml/rss/all.xml" },
-    { "id": "guardian_world",  "name": "The Guardian",    "category": "geopolitics", "url": "https://www.theguardian.com/world/rss" },
     { "id": "dw_world",        "name": "DW",              "category": "geopolitics", "url": "https://rss.dw.com/rdf/rss-en-world" },
     { "id": "foreign_policy",  "name": "Foreign Policy",  "category": "geopolitics", "url": "https://foreignpolicy.com/feed/" },
-    { "id": "ap_world",        "name": "AP World News",   "category": "geopolitics", "url": "http://associated-press.s3-website-us-east-1.amazonaws.com/world-news.xml" },
+    { "id": "ap",              "name": "AP",              "category": "geopolitics", "url": "https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-GB&gl=GB&ceid=GB:en" },
+    { "id": "reuters",         "name": "Reuters",         "category": "geopolitics", "url": "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-GB&gl=GB&ceid=GB:en" },
+    
 
     { "id": "br_kompakt",  "name": "Bundesregierung kompakt",          "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/1151242/feed.xml" },
     { "id": "br_bulletin", "name": "Bundesregierung Bulletin",         "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/2318648/feed.xml" },
