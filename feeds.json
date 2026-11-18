@@ -22,7 +22,6 @@
     { "id": "us_fr",             "name": "US Federal Reserve",  "category": "markets",     "url": "https://www.federalreserve.gov/feeds/press_all.xml" },
     
     { "id": "financial_juice", "name": "Financial Juice",  "category": "wire",     "url": "https://www.financialjuice.com/feed.ashx?xy=rss" },
-    { "id": "market_watch",    "name": "Market Watch",     "category": "wire",     "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories" },
     
     { "id": "aljazeera",       "name": "Al Jazeera",         "category": "geopolitics", "url": "https://www.aljazeera.com/xml/rss/all.xml" },
     { "id": "dw_world",        "name": "DW",                 "category": "geopolitics", "url": "https://rss.dw.com/rdf/rss-en-world" },
