@@ -10,25 +10,27 @@
     { "id": "markets",      "label": "Markets" },
     { "id": "geopolitics",  "label": "World" },
     { "id": "deutschland",  "label": "DE" },
-    { "id": "ec",           "label": "EC" },    
+    { "id": "eu",           "label": "EU" },    
     { "id": "wire",         "label": "Wire" }
   ],
 
   "sources": [
-    { "id": "cnbc_top",        "name": "CNBC",            "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114" },
-    { "id": "cnbc_markets",    "name": "CNBC Markets",    "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258" },
-    { "id": "deutsche_boerse", "name": "Deutsche Börse",  "category": "markets",     "url": "https://api.boerse-frankfurt.de/v1/feeds/news.rss" },
+    { "id": "bloomberg",         "name": "Bloomberg",           "category": "markets",     "url": "https://news.google.com/rss/search?q=site:bloomberg.com/news+markets+when:1d&hl=en-GB&gl=GB&ceid=GB:en" },
+    { "id": "cnbc_markets",      "name": "CNBC Markets",        "category": "markets",     "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258" },
+    { "id": "deutsche_boerse",   "name": "Deutsche Börse",      "category": "markets",     "url": "https://api.boerse-frankfurt.de/v1/feeds/news.rss" },
+    { "id": "ecb",               "name": "ECB",                 "category": "markets",     "url": "https://www.ecb.europa.eu/rss/press.html" },
+    { "id": "us_fr",             "name": "US Federal Reserve",  "category": "markets",     "url": "https://www.federalreserve.gov/feeds/press_all.xml" },
     
-    { "id": "financial_juice", "name": "Financial Juice", "category": "wire",     "url": "https://www.financialjuice.com/feed.ashx?xy=rss" },
-
-    { "id": "bbc_world",       "name": "BBC World",       "category": "geopolitics", "url": "https://feeds.bbci.co.uk/news/world/rss.xml" },
-    { "id": "aljazeera",       "name": "Al Jazeera",      "category": "geopolitics", "url": "https://www.aljazeera.com/xml/rss/all.xml" },
-    { "id": "dw_world",        "name": "DW",              "category": "geopolitics", "url": "https://rss.dw.com/rdf/rss-en-world" },
-    { "id": "foreign_policy",  "name": "Foreign Policy",  "category": "geopolitics", "url": "https://foreignpolicy.com/feed/" },
-    { "id": "ap",              "name": "AP",              "category": "geopolitics", "url": "https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-GB&gl=GB&ceid=GB:en" },
-    { "id": "reuters",         "name": "Reuters",         "category": "geopolitics", "url": "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-GB&gl=GB&ceid=GB:en" },
+    { "id": "financial_juice", "name": "Financial Juice",  "category": "wire",     "url": "https://www.financialjuice.com/feed.ashx?xy=rss" },
+    { "id": "market_watch",    "name": "Market Watch",     "category": "wire",     "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories" },
     
-
+    { "id": "aljazeera",       "name": "Al Jazeera",         "category": "geopolitics", "url": "https://www.aljazeera.com/xml/rss/all.xml" },
+    { "id": "dw_world",        "name": "DW",                 "category": "geopolitics", "url": "https://rss.dw.com/rdf/rss-en-world" },
+    { "id": "foreign_policy",  "name": "Foreign Policy",     "category": "geopolitics", "url": "https://foreignpolicy.com/feed/" },
+    { "id": "reuters",         "name": "Reuters",            "category": "geopolitics", "url": "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-GB&gl=GB&ceid=GB:en" },
+    { "id": "cw_global",       "name": "CrisisWatch Global", "category": "geopolitics", "url": "https://www.crisisgroup.org/rss/139" },
+    { "id": "cw_global_feed",  "name": "CrisisWatch Feed",   "category": "geopolitics", "url": "https://www.crisisgroup.org/rss" },
+    
     { "id": "br_kompakt",  "name": "Bundesregierung kompakt",          "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/1151242/feed.xml" },
     { "id": "br_bulletin", "name": "Bundesregierung Bulletin",         "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/2318648/feed.xml" },
     { "id": "br_presse",   "name": "Bundesregierung Pressemitteilung", "category": "deutschland", "url": "https://www.bundesregierung.de/service/rss/breg-de/1151244/feed.xml" },
@@ -38,10 +40,11 @@
     { "id": "bmukn",       "name": "BMUKN",                            "category": "deutschland", "url": "https://www.bundesumweltministerium.de/meldungen.rss" },
     { "id": "bfn",         "name": "BfN",                              "category": "deutschland", "url": "https://www.bfn.de/feeds/news.rss" },
 
-    { "id": "dg_env",         "name": "DG ENV",         "category": "ec", "url": "https://environment.ec.europa.eu/node/92/rss_en" },
-    { "id": "dg_agri",        "name": "DG AGRI",        "category": "ec", "url": "https://agriculture.ec.europa.eu/node/2/rss_en" },
-    { "id": "news_release",   "name": "News Releases",  "category": "ec", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL" },
-    { "id": "eurastat_news",  "name": "Eurostat News",  "category": "ec", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_EURNEW" }
+    { "id": "eea",            "name": "EEA Press Releases", "category": "eu", "url": "https://www.eea.europa.eu/en/newsroom/rss-feeds/eeas-press-releases-rss/rss.xml" },    
+    { "id": "dg_env",         "name": "DG ENV",             "category": "eu", "url": "https://environment.ec.europa.eu/node/92/rss_en" },
+    { "id": "dg_agri",        "name": "DG AGRI",            "category": "eu", "url": "https://agriculture.ec.europa.eu/node/2/rss_en" },
+    { "id": "news_release",   "name": "News Releases",      "category": "eu", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL" },
+    { "id": "eurastat_news",  "name": "Eurostat News",      "category": "eu", "url": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_EURNEW" }
   ],
 
   "benzinga": {
@@ -63,7 +66,6 @@
     { "symbol": "^STOXX50E","label": "Euro Stoxx 50","decimals": 2 },
     { "symbol": "EURUSD=X", "label": "EUR/USD",    "decimals": 4 },
     { "symbol": "BTC-USD",  "label": "Bitcoin",    "decimals": 0 },
-    { "symbol": "GC=F",     "label": "Gold",       "decimals": 1 },
-    { "symbol": "BZ=F",     "label": "Brent",      "decimals": 2 }
+    { "symbol": "GC=F",     "label": "Gold",       "decimals": 1 }
   ]
 }
